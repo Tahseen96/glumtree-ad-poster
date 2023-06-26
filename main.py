@@ -16,6 +16,7 @@ class GumtreeAdPoster:
         self.password = self.configs["password"]
         self.driver = GumtreeAdPoster.create_chrome_instance()
         self.login_page_url = "https://my.gumtree.com/login"
+        self.post_ad_page_url = "https://my.gumtree.com/manage/ads"
     
     @staticmethod
     def read_configs():
@@ -25,9 +26,11 @@ class GumtreeAdPoster:
         
     @staticmethod
     def create_chrome_instance():
+        prefs = {"credentials_enable_service": False, "profile.password_manager_enabled": False}
         chrome_options = ChromeOptions()
         chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
         chrome_options.add_experimental_option('useAutomationExtension', False)
+        chrome_options.add_experimental_option("prefs", prefs)
         driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=chrome_options)
         driver.maximize_window()
         stealth(driver,
@@ -41,6 +44,11 @@ class GumtreeAdPoster:
         )
         return driver
     
+    def accept_cookies(self):
+        # XPATH FOR ACCEPTING ALL COOKIES
+        accept_cookies_button_xpath = "//*[@id='onetrust-accept-btn-handler']"
+        human_clicker_click(self.driver,accept_cookies_button_xpath)
+    
     def gumtree_login(self):
         # XPATH FOR LOGIN ACCOUNT
         email_input_xpath = "//*[@id='email']"
@@ -52,8 +60,22 @@ class GumtreeAdPoster:
         human_typer(self.driver,password_input_xpath,self.password)
         human_clicker_click(self.driver,login_button_xpath)
     
+    def gumtree_post_ad(self,category):
+        # XPATH FOR POSTING AD
+        button_post_ad_xpath = "//*[text()='Post an ad']"
+        ad_category_input_xpath = "//*[@id='post-ad_title-suggestion']"
+        first_suggested_category_xpath = "//*[text()='Suggested Categories']/following-sibling::div"
+        
+        self.driver.get(self.post_ad_page_url)
+        human_clicker_click(self.driver,button_post_ad_xpath)
+        human_typer(self.driver,ad_category_input_xpath,category)
+        human_clicker_click(self.driver,first_suggested_category_xpath)
+        sleep(100)
+        
     
 if __name__ == "__main__":
-    glumtreeAdPoster = GumtreeAdPoster()
-    glumtreeAdPoster.gumtree_login()
+    gumtreeAdPoster = GumtreeAdPoster()
+    gumtreeAdPoster.accept_cookies()
+    gumtreeAdPoster.gumtree_login()
+    gumtreeAdPoster.gumtree_post_ad("car")
     
